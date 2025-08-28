@@ -1,0 +1,14 @@
+# Arquivo de configuração de ambiente - NUNCA ENVIE PARA O GIT!
+.env
+
+# Arquivos de ambiente virtual Python
+venv/
+env/
+*/.env
+
+# Arquivos de cache do Python
+__pycache__/
+*.pyc
+
+# Pasta de uploads caso não deseje versionar as planilhas enviadas
+uploads/
