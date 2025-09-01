@@ -8,17 +8,17 @@ import pandas as pd
 import psycopg2
 from psycopg2 import sql
 from urllib.parse import urlencode 
-from dotenv import load_dotenv # <-- 1. Importar a biblioteca
+from dotenv import load_dotenv
 
 # --- Carregar variáveis de ambiente do arquivo .env ---
-load_dotenv() # <-- 2. Carregar o arquivo .env
+load_dotenv()
 
 # --- Configuração do Logging ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # --- Configurações do Flask ---
 app = Flask(__name__)
-# <-- 3. Puxar a chave secreta do ambiente (do .env)
+#Puxar a chave secreta do ambiente (do .env)
 app.secret_key = os.getenv('FLASK_SECRET_KEY')
 if not app.secret_key:
     raise ValueError("A chave secreta (FLASK_SECRET_KEY) não foi definida no arquivo .env")
@@ -29,8 +29,8 @@ app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
-# --- Configurações de Conexão com o PostgreSQL (lidas do .env) ---
-# <-- 4. Puxar as configurações do banco do ambiente (do .env)
+# Configurações de Conexão com o PostgreSQL (lidas do .env)
+# Puxar as configurações do banco do ambiente (do .env)
 db_config = {
     'dbname': os.getenv('DB_NAME'),
     'user': os.getenv('DB_USER'),
@@ -120,13 +120,13 @@ def importar_planilha_pessoas(caminho_planilha, nome_convenio):
             caminho_planilha,
             encoding='latin1',
             sep=';',
-            header=None,  # MUDANÇA 1: Diz ao Pandas para NÃO usar a primeira linha como cabeçalho.
-            usecols=range(len(expected_csv_columns)), # Continua lendo apenas as primeiras 17 colunas por posição.
+            header=None,  # pandas não usar a primeira linha como cabeçalho.
+            usecols=range(len(expected_csv_columns)), # continua lendo apenas as primeiras 17 colunas por posição.
             names=expected_csv_columns, # Nomeia as colunas lidas de forma confiável.
             engine='python',
             on_bad_lines='warn'
         )
-        df = df.iloc[1:].reset_index(drop=True)  # MUDANÇA 2: Remove a primeira linha que contém os cabeçalhos originais.
+        df = df.iloc[1:].reset_index(drop=True)  # remove a primeira linha que contém os cabeçalhos originais.
         logging.info(f"CSV lido e cabeçalho removido. {len(df)} linhas de dados para processar.")
 
         logging.info("Iniciando pré-processamento dos dados.")
@@ -283,13 +283,13 @@ def index():
 
 @app.route('/visualizar')
 def visualizar_dados():
-    # 1. Inicializa todas as variáveis com valores padrão seguros
+    # Inicializa todas as variáveis com valores padrão seguros
     conn = None
     usuarios = []
     page = 1
     total_pages = 1
     
-    # 2. Lê os parâmetros de filtro da URL
+    # Lê os parâmetros de filtro da URL
     estado_filtro = request.args.get('estado', '')
     cpf_busca = request.args.get('cpf_busca', '')
     nome_busca = request.args.get('nome_busca', '')
@@ -299,12 +299,12 @@ def visualizar_dados():
         conn = get_db_connection()
         cur = conn.cursor()
 
-        # 3. Define as variáveis de paginação
+        # Define as variáveis de paginação
         page = request.args.get('page', 1, type=int)
         per_page = 20
         offset = (page - 1) * per_page
 
-        # 4. Constrói a query de filtro dinamicamente
+        # Constrói a query de filtro dinamicamente
         base_query = "FROM pessoas WHERE 1=1"
         params = []
         
@@ -321,18 +321,18 @@ def visualizar_dados():
             base_query += " AND nome ILIKE %s"
             params.append(f"%{nome_busca.strip()}%")
 
-        # 5. Executa a query para CONTAR o total de registros
+        # Executa a query para CONTAR o total de registros
         count_query = f"SELECT COUNT(*) {base_query};"
         cur.execute(count_query, params)
         total_usuarios = cur.fetchone()[0]
         
-        # 6. Calcula o total de páginas
+        # Calcula o total de páginas
         if total_usuarios > 0:
             total_pages = (total_usuarios + per_page - 1) // per_page
         else:
             total_pages = 1
 
-        # 7. Busca os dados da PÁGINA ATUAL
+        # Busca os dados da PÁGINA ATUAL
         select_query = f"SELECT cpf, nome, uf_endereco, convenio {base_query} ORDER BY nome, cpf LIMIT %s OFFSET %s;"
         query_params_with_pagination = params + [per_page, offset]
         
