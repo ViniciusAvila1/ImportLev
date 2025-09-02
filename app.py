@@ -134,9 +134,13 @@ def importar_planilha_pessoas(caminho_planilha, nome_convenio):
         df['cpf'] = df['cpf'].astype(str).str.replace(r'\D', '', regex=True)
         df['data_nascimento'] = pd.to_datetime(df['data_nascimento'], format='%d/%m/%Y', errors='coerce')
         df['salario'] = df['salario'].astype(str).str.replace(',', '.', regex=False)
-        numeric_cols = ['salario', 'idade']
-        for col in numeric_cols:
-            df[col] = pd.to_numeric(df[col], errors='coerce')
+        df['salario'] = pd.to_numeric(df['salario'], errors='coerce')
+
+        # processando idade (que é INTEGER no banco de dados)
+        df['idade'] = pd.to_numeric(df['idade'], errors='coerce')
+        # conversão para o tipo de inteiro anulável do Pandas ('Int64')
+        # removendo o ".0" dos números e mantendo os valores nulos (NaN) como <NA>
+        df['idade'] = df['idade'].astype('Int64')
 
         bool_map = {'sim': True, 's': True, 'true': True, '1': True, 'não': False, 'n': False, 'false': False, '0': False}
         df['nao_perturbe'] = df['nao_perturbe'].astype(str).str.lower().map(bool_map)
@@ -260,7 +264,7 @@ def index():
             if not estado_convenio:
                 flash('Por favor, selecione o estado do convênio.', 'error')
                 return render_template('index.html', estados=ESTADOS_BRASILEIROS, **form_data)
-            nome_convenio = f'ESTADUAL_{estado_convenio}'
+            nome_convenio = f'GOVERNO_{estado_convenio}'
         elif esfera == 'prefeitura':
             if not estado_prefeitura or not cidade_prefeitura:
                 flash('Por favor, selecione o estado e a cidade do convênio.', 'error')
