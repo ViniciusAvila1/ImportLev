@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Visualizar Usuários</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="icon" href="{{ url_for('static', filename='LEV_LOGO_2025-01.ico') }}">
+    <link rel="icon" href="{{ url_for('static', filename='LEV_LOGO_2025-01.ico') }}"> <!-- Ícone -->
     <style>
         /* Pequeno ajuste para o botão de limpar filtros */
         .btn-limpar {
@@ -99,7 +99,7 @@
         </table>
     </div>
 
-    {% if total_pages > 1 %}
+    {% if total_pages > 1 %} <!-- Mostrar paginação apenas se houver mais de uma página -->
     <nav aria-label="Navegação das páginas" class="mt-4">
         <ul class="pagination justify-content-center flex-wrap">
 
@@ -111,9 +111,9 @@
                 <a class="page-link" href="{{ url_for('visualizar_dados', page=current_page - 1, **filter_args) }}">Anterior</a>
             </li>
 
-            {% set page_window = 2 %}
+            {% set page_window = 2 %} <!-- Número de páginas para mostrar antes e depois da página atual -->
             {% for page_num in range(1, total_pages + 1) %}
-                {% if page_num == current_page %}
+                {% if page_num == current_page %} <!-- Página atual -->
                     <li class="page-item active" aria-current="page">
                         <span class="page-link">{{ page_num }}</span>
                     </li>
@@ -124,7 +124,7 @@
                 {% elif loop.first or loop.last %}
                     {% if (current_page - page_window) > 2 and loop.first %}
                         <li class="page-item disabled"><span class="page-link">...</span></li>
-                    {% elif (current_page + page_window) < (total_pages - 1) and loop.last %}
+                    {% elif (current_page + page_window) < (total_pages - 1) and loop.last %} 
                         <li class="page-item disabled"><span class="page-link">...</span></li>
                     {% endif %}
                 {% endif %}

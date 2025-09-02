@@ -222,61 +222,74 @@ def get_cidades(uf):
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    # O método GET continua o mesmo, apenas renderiza o template com a lista de estados
+    if request.method == 'GET':
+        return render_template('index.html', estados=ESTADOS_BRASILEIROS)
+
+    # O método POST agora terá uma lógica mais robusta
     if request.method == 'POST':
-        if 'csv_file' not in request.files:
-            flash('Nenhum arquivo enviado.', 'error')
-            return redirect(request.url)
-
-        file = request.files['csv_file']
-        if file.filename == '':
-            flash('Nenhum arquivo selecionado.', 'error')
-            return redirect(request.url)
-
-        # --- LÓGICA PARA CONSTRUIR O NOME DO CONVÊNIO ---
+        # 1. Coleta todos os dados do formulário imediatamente
         esfera = request.form.get('esfera')
-        nome_convenio = ''
+        estado_convenio = request.form.get('estado_convenio')
+        estado_prefeitura = request.form.get('estado_prefeitura')
+        cidade_prefeitura = request.form.get('cidade_prefeitura')
+        file = request.files.get('csv_file')
 
+        # Cria um dicionário com os dados selecionados para passar de volta ao template em caso de erro
+        form_data = {
+            'selected_esfera': esfera,
+            'selected_estado_convenio': estado_convenio,
+            'selected_estado_prefeitura': estado_prefeitura,
+            'selected_cidade_prefeitura': cidade_prefeitura
+        }
+
+        # 2. Realiza as validações
+        if not file or file.filename == '':
+            flash('Nenhum arquivo selecionado.', 'error')
+            return render_template('index.html', estados=ESTADOS_BRASILEIROS, **form_data)
+
+        if not file.filename.lower().endswith('.csv'):
+            flash('Tipo de arquivo não permitido. Por favor, envie um arquivo CSV.', 'error')
+            return render_template('index.html', estados=ESTADOS_BRASILEIROS, **form_data)
+        
+        # 3. Constrói o nome do convênio (lógica que já tínhamos)
+        nome_convenio = ''
         if esfera == 'federal':
             nome_convenio = 'FEDERAL'
         elif esfera == 'estadual':
-            estado_convenio = request.form.get('estado_convenio')
             if not estado_convenio:
                 flash('Por favor, selecione o estado do convênio.', 'error')
-                return redirect(request.url)
-            nome_convenio = f'GOVERNO_{estado_convenio}'
+                return render_template('index.html', estados=ESTADOS_BRASILEIROS, **form_data)
+            nome_convenio = f'ESTADUAL_{estado_convenio}'
         elif esfera == 'prefeitura':
-            estado_prefeitura = request.form.get('estado_prefeitura')
-            cidade_prefeitura = request.form.get('cidade_prefeitura')
             if not estado_prefeitura or not cidade_prefeitura:
                 flash('Por favor, selecione o estado e a cidade do convênio.', 'error')
-                return redirect(request.url)
+                return render_template('index.html', estados=ESTADOS_BRASILEIROS, **form_data)
             nome_convenio = f'PREFEITURA_{cidade_prefeitura.replace(" ", "_").upper()}_{estado_prefeitura}'
         else:
             flash('Por favor, selecione a esfera do convênio.', 'error')
-            return redirect(request.url)
-        # --- FIM DA LÓGICA ---
+            return render_template('index.html', estados=ESTADOS_BRASILEIROS, **form_data)
 
-        if file and file.filename.lower().endswith('.csv'):
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
-            file.save(filepath)
+        # 4. Se tudo estiver certo, prossegue com a importação
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+        file.save(filepath)
 
-            # A função de importação recebe o nome do convênio já formatado
-            success, message, logs = importar_planilha_pessoas(filepath, nome_convenio)
+        success, message, logs = importar_planilha_pessoas(filepath, nome_convenio)
 
-            if os.path.exists(filepath):
-                os.remove(filepath)
+        if os.path.exists(filepath):
+            os.remove(filepath)
 
-            if success:
-                flash('Importação concluída com sucesso!', 'success')
-                flash(message, 'info')
-            else:
-                flash('Falha na importação.', 'error')
-                flash(message, 'error')
-
-            return redirect(url_for('visualizar_dados'))
+        if success:
+            flash('Importação concluída com sucesso!', 'success')
+            flash(message, 'info')
         else:
-            flash('Tipo de arquivo não permitido. Por favor, envie um arquivo CSV.', 'error')
-            return redirect(request.url)
+            flash('Falha na importação.', 'error')
+            flash(message, 'error')
+
+        return redirect(url_for('visualizar_dados'))
+    else:
+        flash('Tipo de arquivo não permitido. Por favor, envie um arquivo CSV.', 'error')
+        return redirect(request.url)
 
     return render_template('index.html', estados=ESTADOS_BRASILEIROS)
 

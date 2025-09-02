@@ -31,7 +31,7 @@
 
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">Importar Planilha de Leads</h3>
+                    <h3 class="card-title">Importar Planilha de Pessoas</h3>
                 </div>
                 <div class="card-body">
                     <form action="{{ url_for('index') }}" method="post" enctype="multipart/form-data">
@@ -40,37 +40,37 @@
                             <label for="esfera" class="form-label"><strong>1. Selecione a Esfera do Convênio:</strong></label>
                             <select class="form-select" id="esfera" name="esfera" required>
                                 <option value="" selected disabled>-- Escolha uma opção --</option>
-                                <option value="federal">Federal</option>
-                                <option value="estadual">Estadual</option>
-                                <option value="prefeitura">Prefeitura</option>
+                                <option value="federal" {% if selected_esfera == 'federal' %}selected{% endif %}>Federal</option>
+                                <option value="estadual" {% if selected_esfera == 'estadual' %}selected{% endif %}>Governo Estadual</option>
+                                <option value="prefeitura" {% if selected_esfera == 'prefeitura' %}selected{% endif %}>Prefeitura</option>
                             </select>
                         </div>
 
-                        <div id="campos-estadual" class="mb-3 hidden">
+                        <div id="campos-estadual" class="mb-3 {% if selected_esfera != 'estadual' %}hidden{% endif %}">
                             <label for="estado_convenio" class="form-label"><strong>2. Selecione o Estado:</strong></label>
                             <select class="form-select" id="estado_convenio" name="estado_convenio">
                                 <option value="" selected disabled>-- Selecione o Estado --</option>
                                 {% for sigla, nome in estados %}
-                                    <option value="{{ sigla }}">{{ nome }}</option>
+                                    <option value="{{ sigla }}" {% if sigla == selected_estado_convenio %}selected{% endif %}>{{ nome }}</option>
                                 {% endfor %}
                             </select>
                         </div>
 
-                        <div id="campos-prefeitura-estado" class="mb-3 hidden">
+                        <div id="campos-prefeitura-estado" class="mb-3 {% if selected_esfera != 'prefeitura' %}hidden{% endif %}">
                             <label for="estado_prefeitura" class="form-label"><strong>2. Selecione o Estado da Prefeitura:</strong></label>
                             <select class="form-select" id="estado_prefeitura" name="estado_prefeitura">
                                 <option value="" selected disabled>-- Primeiro selecione o Estado --</option>
                                 {% for sigla, nome in estados %}
-                                    <option value="{{ sigla }}">{{ nome }}</option>
+                                    <option value="{{ sigla }}" {% if sigla == selected_estado_prefeitura %}selected{% endif %}>{{ nome }}</option>
                                 {% endfor %}
                             </select>
                         </div>
 
-                        <div id="campos-prefeitura-cidade" class="mb-3 hidden">
+                        <div id="campos-prefeitura-cidade" class="mb-3 {% if selected_esfera != 'prefeitura' %}hidden{% endif %}">
                             <label for="cidade_prefeitura" class="form-label"><strong>3. Selecione a Cidade:</strong></label>
                             <select class="form-select" id="cidade_prefeitura" name="cidade_prefeitura" disabled>
                                 <option value="" selected disabled>-- Aguardando seleção do Estado --</option>
-                            </select>
+                                </select>
                         </div>
 
                         <div class="mb-3">
@@ -92,71 +92,83 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Seleciona os elementos do formulário
-    const esferaSelect = document.getElementById('esfera');
-    const estadualDiv = document.getElementById('campos-estadual');
-    const prefeituraEstadoDiv = document.getElementById('campos-prefeitura-estado');
-    const prefeituraCidadeDiv = document.getElementById('campos-prefeitura-cidade');
-    
-    const estadoConvenioSelect = document.getElementById('estado_convenio');
-    const estadoPrefeituraSelect = document.getElementById('estado_prefeitura');
-    const cidadePrefeituraSelect = document.getElementById('cidade_prefeitura');
-
-    // Função para resetar e esconder todos os campos dinâmicos
-    function resetCampos() {
-        estadualDiv.classList.add('hidden');
-        prefeituraEstadoDiv.classList.add('hidden');
-        prefeituraCidadeDiv.classList.add('hidden');
+    document.addEventListener('DOMContentLoaded', function() {
+        const esferaSelect = document.getElementById('esfera');
+        const estadualDiv = document.getElementById('campos-estadual');
+        const prefeituraEstadoDiv = document.getElementById('campos-prefeitura-estado');
+        const prefeituraCidadeDiv = document.getElementById('campos-prefeitura-cidade');
         
-        estadoConvenioSelect.required = false;
-        estadoPrefeituraSelect.required = false;
-        cidadePrefeituraSelect.required = false;
-    }
+        const estadoConvenioSelect = document.getElementById('estado_convenio');
+        const estadoPrefeituraSelect = document.getElementById('estado_prefeitura');
+        const cidadePrefeituraSelect = document.getElementById('cidade_prefeitura');
+        
+        // Mantém a cidade selecionada em caso de erro de validação
+        const preSelectedCity = "{{ selected_cidade_prefeitura or '' }}";
 
-    // Evento ao mudar a ESFERA
-    esferaSelect.addEventListener('change', function() {
-        resetCampos();
-        const selectedEsfera = this.value;
-
-        if (selectedEsfera === 'estadual') {
-            estadualDiv.classList.remove('hidden');
-            estadoConvenioSelect.required = true;
-        } else if (selectedEsfera === 'prefeitura') {
-            prefeituraEstadoDiv.classList.remove('hidden');
-            prefeituraCidadeDiv.classList.remove('hidden');
-            estadoPrefeituraSelect.required = true;
-            cidadePrefeituraSelect.required = true;
-        }
-    });
-
-    // Evento ao mudar o ESTADO (para buscar cidades)
-    estadoPrefeituraSelect.addEventListener('change', function() {
-        const selectedUf = this.value;
-        cidadePrefeituraSelect.innerHTML = '<option value="" selected disabled>Carregando...</option>';
-        cidadePrefeituraSelect.disabled = true;
-
-        if (!selectedUf) {
-            cidadePrefeituraSelect.innerHTML = '<option value="" selected disabled>-- Aguardando seleção do Estado --</option>';
-            return;
+        function resetCampos() {
+            estadualDiv.classList.add('hidden');
+            prefeituraEstadoDiv.classList.add('hidden');
+            prefeituraCidadeDiv.classList.add('hidden');
+            
+            estadoConvenioSelect.required = false;
+            estadoPrefeituraSelect.required = false;
+            cidadePrefeituraSelect.required = false;
         }
 
-        // Faz a chamada à nossa API
-        fetch(`/api/cidades/${selectedUf}`)
-            .then(response => response.json())
-            .then(data => {
-                cidadePrefeituraSelect.innerHTML = '<option value="" selected disabled>-- Selecione a Cidade --</option>';
-                data.forEach(cidade => {
-                    const option = document.createElement('option');
-                    option.value = cidade;
-                    option.textContent = cidade;
-                    cidadePrefeituraSelect.appendChild(option);
+        function handleEsferaChange() {
+            resetCampos();
+            const selectedEsfera = esferaSelect.value;
+
+            if (selectedEsfera === 'estadual') {
+                estadualDiv.classList.remove('hidden');
+                estadoConvenioSelect.required = true;
+            } else if (selectedEsfera === 'prefeitura') {
+                prefeituraEstadoDiv.classList.remove('hidden');
+                prefeituraCidadeDiv.classList.remove('hidden');
+                estadoPrefeituraSelect.required = true;
+                cidadePrefeituraSelect.required = true;
+            }
+        }
+
+        function fetchAndSelectCities() {
+            const selectedUf = estadoPrefeituraSelect.value;
+            cidadePrefeituraSelect.innerHTML = '<option value="" selected disabled>Carregando...</option>';
+            cidadePrefeituraSelect.disabled = true;
+
+            if (!selectedUf) {
+                cidadePrefeituraSelect.innerHTML = '<option value="" selected disabled>-- Aguardando seleção do Estado --</option>';
+                return;
+            }
+
+            fetch(`/api/cidades/${selectedUf}`)
+                .then(response => response.json())
+                .then(data => {
+                    cidadePrefeituraSelect.innerHTML = '<option value="" selected disabled>-- Selecione a Cidade --</option>';
+                    data.forEach(cidade => {
+                        const option = document.createElement('option');
+                        option.value = cidade;
+                        option.textContent = cidade;
+                        // Se esta cidade era a que estava selecionada antes do erro, marca ela de novo
+                        if (cidade === preSelectedCity) {
+                            option.selected = true;
+                        }
+                        cidadePrefeituraSelect.appendChild(option);
+                    });
+                    cidadePrefeituraSelect.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Erro ao buscar cidades:', error);
+                    cidadePrefeituraSelect.innerHTML = '<option value="" selected disabled>Erro ao carregar cidades</option>';
                 });
-                cidadePrefeituraSelect.disabled = false;
-            })
-            .catch(error => {
-                console.error('Erro ao buscar cidades:', error);
-                cidadePrefeituraSelect.innerHTML = '<option value="" selected disabled>Erro ao carregar cidades</option>';
-            });
+        }
+
+        esferaSelect.addEventListener('change', handleEsferaChange);
+        estadoPrefeituraSelect.addEventListener('change', fetchAndSelectCities);
+
+        // Lógica para restaurar o estado do formulário no carregamento da página
+        if (estadoPrefeituraSelect.value) {
+            fetchAndSelectCities();
+        }
     });
 </script>
 
