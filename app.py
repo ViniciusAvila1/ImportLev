@@ -132,7 +132,7 @@ def importar_planilha_pessoas(caminho_planilha, nome_convenio):
         logging.info("Iniciando pré-processamento dos dados.")
         df.rename(columns={'NaoPerturbe': 'nao_perturbe'}, inplace=True)
         df['cpf'] = df['cpf'].astype(str).str.replace(r'\D', '', regex=True)
-        df['data_nascimento'] = pd.to_datetime(df['data_nascimento'], format='%d/%m/%Y', errors='coerce')
+        df['data_nascimento'] = pd.to_datetime(df['data_nascimento'], dayfirst=True, errors='coerce')
         df['salario'] = df['salario'].astype(str).str.replace(',', '.', regex=False)
         df['salario'] = pd.to_numeric(df['salario'], errors='coerce')
 
@@ -316,7 +316,7 @@ def visualizar_dados():
 
         # Define as variáveis de paginação
         page = request.args.get('page', 1, type=int)
-        per_page = 20
+        per_page = 20 # Itens por página
         offset = (page - 1) * per_page
 
         # Constrói a query de filtro dinamicamente
@@ -348,12 +348,19 @@ def visualizar_dados():
             total_pages = 1
 
         # Busca os dados da PÁGINA ATUAL
-        select_query = f"SELECT cpf, nome, uf_endereco, convenio {base_query} ORDER BY nome, cpf LIMIT %s OFFSET %s;"
+        select_query = f"SELECT cpf, nome, data_nascimento, convenio {base_query} ORDER BY nome, cpf LIMIT %s OFFSET %s;"
         query_params_with_pagination = params + [per_page, offset]
         
         cur.execute(select_query, query_params_with_pagination)
-        usuarios = cur.fetchall()
+        usuarios_raw = cur.fetchall() # Lista de tuplas (cpf, nome, data_nascimento, convenio)
         cur.close()
+        
+        #Formatar data para padrão brasileiro (dd/mm/yyyy)
+        usuarios = []
+        for user in usuarios_raw:
+            cpf, nome, data_nasc, convenio = user
+            data_formatada = data_nasc.strftime('%d/%m/%Y') if data_nasc else None
+            usuarios.append((cpf, nome, data_formatada, convenio))
 
     except Exception as e:
         flash(f"Erro ao carregar dados: {e}", 'error')
