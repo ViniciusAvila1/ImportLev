@@ -30,11 +30,11 @@
 
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1>Visualização de Usuários</h1>
-        <a href="{{ url_for('index') }}" class="btn btn-primary">Nova Importação</a>
+        <a href="{{ url_for('main.index') }}" class="btn btn-primary">Nova Importação</a>
     </div>
 
     <div class="card card-body mb-4">
-        <form method="GET" action="{{ url_for('visualizar_dados') }}">
+        <form method="GET" action="{{ url_for('main.visualizar_dados') }}">
             <div class="row g-3 align-items-end">
                 <div class="col-md-6 col-lg-3">
                     <label for="nome_busca" class="form-label">Buscar por Nome:</label>
@@ -48,8 +48,8 @@
                     <label for="estado" class="form-label">Filtrar por UF:</label>
                     <select class="form-select" id="estado" name="estado">
                         <option value="TODOS">Todos os Estados</option>
-                        {% for sigla, nome in estados %}
-                            <option value="{{ sigla }}" {% if sigla == selected_estado %}selected{% endif %}>{{ nome }}</option>
+                        {% for estado in estados %}
+                            <option value="{{ estado.sigla }}" {% if estado.sigla == selected_estado %}selected{% endif %}>{{ estado.nome }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -66,7 +66,7 @@
                     <button type="submit" class="btn btn-success w-100">Filtrar</button>
                 </div>
                 <div class="col-md-6 col-lg-1">
-                    <a href="{{ url_for('visualizar_dados') }}" class="btn btn-secondary w-100">Limpar</a>
+                    <a href="{{ url_for('main.visualizar_dados') }}" class="btn btn-secondary w-100">Limpar</a>
                 </div>
             </div>
         </form>
@@ -104,11 +104,11 @@
         <ul class="pagination justify-content-center flex-wrap">
 
             <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
-                <a class="page-link" href="{{ url_for('visualizar_dados', page=1, **filter_args) }}">&laquo; Primeira</a>
+                <a class="page-link" href="{{ url_for('main.visualizar_dados', page=1, **filter_args) }}">&laquo; Primeira</a>
             </li>
 
             <li class="page-item {% if current_page <= 1 %}disabled{% endif %}">
-                <a class="page-link" href="{{ url_for('visualizar_dados', page=current_page - 1, **filter_args) }}">Anterior</a>
+                <a class="page-link" href="{{ url_for('main.visualizar_dados', page=current_page - 1, **filter_args) }}">Anterior</a>
             </li>
 
             {% set page_window = 2 %} <!-- Número de páginas para mostrar antes e depois da página atual -->
@@ -119,7 +119,7 @@
                     </li>
                 {% elif page_num >= current_page - page_window and page_num <= current_page + page_window %}
                     <li class="page-item">
-                        <a class="page-link" href="{{ url_for('visualizar_dados', page=page_num, **filter_args) }}">{{ page_num }}</a>
+                        <a class="page-link" href="{{ url_for('main.visualizar_dados', page=page_num, **filter_args) }}">{{ page_num }}</a>
                     </li>
                 {% elif loop.first or loop.last %}
                     {% if (current_page - page_window) > 2 and loop.first %}
@@ -131,11 +131,11 @@
             {% endfor %}
 
             <li class="page-item {% if current_page >= total_pages %}disabled{% endif %}">
-                <a class="page-link" href="{{ url_for('visualizar_dados', page=current_page + 1, **filter_args) }}">Próxima</a>
+                <a class="page-link" href="{{ url_for('main.visualizar_dados', page=current_page + 1, **filter_args) }}">Próxima</a>
             </li>
 
             <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
-                <a class="page-link" href="{{ url_for('visualizar_dados', page=total_pages, **filter_args) }}">Última &raquo;</a>
+                <a class="page-link" href="{{ url_for('main.visualizar_dados', page=total_pages, **filter_args) }}">Última &raquo;</a>
             </li>
 
         </ul>

@@ -34,7 +34,7 @@
                     <h3 class="card-title">Importar Planilha de Pessoas</h3>
                 </div>
                 <div class="card-body">
-                    <form action="{{ url_for('index') }}" method="post" enctype="multipart/form-data">
+                    <form action="{{ url_for('main.index') }}" method="post" enctype="multipart/form-data">
 
                         <div class="mb-3">
                             <label for="esfera" class="form-label"><strong>1. Selecione a Esfera do Convênio:</strong></label>
@@ -50,8 +50,8 @@
                             <label for="estado_convenio" class="form-label"><strong>2. Selecione o Estado:</strong></label>
                             <select class="form-select" id="estado_convenio" name="estado_convenio">
                                 <option value="" selected disabled>-- Selecione o Estado --</option>
-                                {% for sigla, nome in estados %}
-                                    <option value="{{ sigla }}" {% if sigla == selected_estado_convenio %}selected{% endif %}>{{ nome }}</option>
+                                {% for estado in estados %}
+                                    <option value="{{ estado.sigla }}" {% if estado.sigla == selected_estado_convenio %}selected{% endif %}>{{ estado.nome }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -60,8 +60,8 @@
                             <label for="estado_prefeitura" class="form-label"><strong>2. Selecione o Estado da Prefeitura:</strong></label>
                             <select class="form-select" id="estado_prefeitura" name="estado_prefeitura">
                                 <option value="" selected disabled>-- Primeiro selecione o Estado --</option>
-                                {% for sigla, nome in estados %}
-                                    <option value="{{ sigla }}" {% if sigla == selected_estado_prefeitura %}selected{% endif %}>{{ nome }}</option>
+                                {% for estado in estados %}
+                                    <option value="{{ estado.sigla }}" {% if estado.sigla == selected_estado_prefeitura %}selected{% endif %}>{{ estado.nome }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -80,7 +80,7 @@
 
                         <div class="d-grid gap-2">
                              <button type="submit" class="btn btn-primary btn-lg">Importar</button>
-                             <a href="{{ url_for('visualizar_dados') }}" class="btn btn-secondary">Ir para Visualização</a>
+                             <a href="{{ url_for('main.visualizar_dados') }}" class="btn btn-secondary">Ir para Visualização</a>
                         </div>
                        
                     </form>
